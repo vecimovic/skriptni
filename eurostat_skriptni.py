@@ -1,8 +1,81 @@
 import eurostat
+import sys
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
+if sys.version_info[0] < 3:
+    import Tkinter as Tk
+else:
+    import tkinter as Tk
 
+matplotlib.use("TkAgg")
+
+#riječnici za gumbove
+nuts = {"Republika Hrvatska" : "HR0", 
+          "Primorsko-goranska županija" : "HR031", 
+          "Ličko-senjska županija" : "HR032", 
+          "Zadarska županija" : "HR033", 
+          "Šibensko-kninska županija" : "HR034", 
+          "Splitsko-dalmatinska županija" : "HR035",
+          "Istarska županija" : "HR036", 
+          "Dubrovačko-neretvanska županija" : "HR037" ,
+          "Grad Zagreb" : "HR041",
+          "Zagrebačka županija" : "HR042",
+          "Krapinsko-zagorska županija" : "HR043",
+          "Varaždinska županija" : "HR044",
+          "Koprivničko-križevačka županija" : "HR045",
+          "Međimurska županija" : "HR046",
+          "Bjelovarsko-bilogorska županija" : "HR047",
+          "Virovitičko-podravska županija" : "HR048",
+          "Požeško-slavonska županija" : "HR049",
+          "Brodsko-posavska županija" : "HR04A",
+          "Osječko-baranjska županija" : "HR04B",
+          "Vukovarsko-srijemska županija" : "HR04C",
+          "Karlovačka županija" : "HR04D",
+          "Sisačko-moslavačka županija" : "HR04E"}
+
+plots = {"Cijelokupna populacija" : 1,
+         "Usporedba muške i ženske populacije" : 2,
+         "Usporedba populacije po starosti": 3,
+         "Usporedba populacije po bračnom statusu" : 4,
+         "Usporedba populacije po obiteljskom statusu": 5
+    }
+
+#vraca kljuc rijecnka na temelju vrijednosti
+def get_key(val,dict):
+    for key, value in dict.items():
+         if val == value:
+             return key
+ 
+    return "key doesn't exist"
+
+#crta graf za cijelokupnu populaciju nekog područja
+def population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title):
+
+    for i in range(len(HR)):
+        if HR[i][geo_index] == nuts:
+            if HR[i][sex_index] == 'T' and HR[i][age_index] == 'TOTAL':
+                p = HR[i][4:]
+
+    width = 0.3
+    n = len(labels)
+    ind = np.arange(n)
+    fig = Figure(figsize=(8,8))
+    ax = fig.add_subplot(111)
+    ax.bar(ind,p,width,color='green')
+    ax.set_xticks(ind)
+    ax.set_xticklabels(labels, fontsize = 10)
+    ax.set_title(title,size='15')
+    ax.set_xlabel("Godine")
+    ax.set_ylabel("Populacija")
+
+
+    return fig
+
+#crta graf usporedbe muske i zenske populacije nekog područja
 def m_f_population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title):
 
     for i in range(len(HR)):
@@ -14,14 +87,17 @@ def m_f_population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title
     width = 0.3
     n = len(labels)
     ind = np.arange(n)
-    fig = plt.figure(figsize=(11.69,8.27))
-    plt.bar(ind,f,width,label='Ž',color='red')
-    plt.bar(ind + width,m,width,label='M',color='blue')
-    plt.xticks(ind + width / 2,labels)
-    plt.title(title,size='15')
-    plt.xlabel("Godine")
-    plt.ylabel("Populacija")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    fig = Figure(figsize=(8,8))
+    ax = fig.add_subplot(111)
+    ax.bar(ind,f,width,label='Ž',color='red')
+    ax.bar(ind + width,m,width,label='M',color='blue')
+    ax.set_xticks(ind + width / 2)
+    ax.set_xticklabels(labels, fontsize = 10)
+    ax.set_title(title,size='15')
+    ax.set_xlabel("Godine")
+    ax.set_ylabel("Populacija")
+    ax.legend()
+
     return fig
 
 def make_autopct(values):
@@ -29,6 +105,7 @@ def make_autopct(values):
         return '{p:.1f}%'.format(p=pct)
     return my_autopct
 
+#crta graf usporedbe starosne dobi stanovnika nekog područja
 def population_age_pie_chart(HR, nuts, geo_index, sex_index, age_index, year_index, labels, title):
     
     for i in range(len(HR)):
@@ -76,13 +153,117 @@ def population_age_pie_chart(HR, nuts, geo_index, sex_index, age_index, year_ind
     data = [y_lt5, y5_9, y10_14, y15_19, y20_24, y25_29, y30_34, y35_39, y40_44, y45_49, y50_54, 
             y55_59, y60_64, y65_69, y70_74, y75_79, y80_84, y85_89, y_ge90]
     
-    fig = plt.figure(figsize=(11.69,8.27))
-    plt.pie(data, labels = ages, autopct=make_autopct(data))
-    plt.title(title + " ({}. godina)".format(labels[year_index]),size='15')
+    fig = Figure(figsize=(8,8))
+    ax = fig.add_subplot(111)
+    ax.pie(data, labels = ages, autopct=make_autopct(data))
+    ax.set_title(title + " ({}. godina)".format(labels[year_index]),size='15')
     
     return fig
-    
 
+#crta graf koji uspoređuje populaciju nekog područja prema bračnom statusu 
+def marsta_barh_chart(data, nuts, marsta_index, sex_index, age_index, labels, title):
+    for i in range(len(data)):
+        if data[i][age_index] == 'TOTAL' and data[i][sex_index] == 'T':
+            if data[i][marsta_index] == 'MAR':
+                mar = data1[i]
+            if data[i][marsta_index] == 'DISREP':
+                disrep = data1[i]
+            if data[i][marsta_index] == 'DIV':
+                div = data1[i]
+            if data[i][marsta_index] == 'DTHREP':
+                dthrep = data1[i]
+            if data[i][marsta_index] == 'REP':
+                rep = data1[i]
+            if data[i][marsta_index] == 'SIN':
+                sin = data1[i]
+            if data[i][marsta_index] == 'UNK':
+                unk = data1[i]
+            if data[i][marsta_index] == 'WID':
+                wid = data1[i]
+    
+    nuts_index = labels.index(nuts)
+    marstats = ['MAR', 'DISREP', 'DIV', 'DTHREP', 'REP', 'SIN', 'UNK', 'WID']
+    '''
+    MAR - u braku
+    DISREP - Persons whose registered partnership was legally dissolved
+    DIV - rastavljeni
+    DTHREP - Persons whose registered partnership ended with the death of the partner
+    REP - Persons in registered partnership
+    SIN - samci
+    UNK - nepoznato
+    WID - Widowed persons
+    '''
+    stats = [mar[nuts_index], disrep[nuts_index], div[nuts_index], dthrep[nuts_index], rep[nuts_index],
+            sin[nuts_index], unk[nuts_index], wid[nuts_index]]
+    ind = np.arange(len(marstats))
+    fig = Figure(figsize=(8,8))
+    ax = fig.add_subplot(111)
+    ax.barh(ind, stats, align='center', color='orange')
+    ax.set_yticks(ind)
+    ax.set_yticklabels(marstats)
+    ax.set_xlabel('Populacija')
+    ax.set_title(title)
+    
+    
+    return fig
+
+#crta graf koji uspoređuje populaciju nekog područja prema obiteljskom statusu 
+def hhstatus_barh_chart(data, nuts, hhstatus_index, sex_index, age_index, labels, title):
+
+    for i in range(len(data)):
+        if data[i][age_index] == 'TOTAL' and data[i][sex_index] == 'T':
+            if data[i][hhstatus_index] == 'CH_PAR':
+                ch_par = data1[i]
+            if data[i][hhstatus_index] == 'CPL':
+                cpl = data1[i]
+            if data[i][hhstatus_index] == 'CSU':
+                csu = data1[i]
+            if data[i][hhstatus_index] == 'MAR':
+                mar = data1[i]
+            if data[i][hhstatus_index] == 'NAP':
+                nap = data1[i]
+            if data[i][hhstatus_index] == 'PAR1':
+                par1 = data1[i]
+            if data[i][hhstatus_index] == 'REP':
+                rep = data1[i]
+            if data[i][hhstatus_index] == 'UNK':
+                unk = data1[i]
+            
+    nuts_index = labels.index(nuts)
+    hhstatuses = ['CH_PAR', 'CPL', 'CSU', 'MAR', 'NAP', 'PAR1', 'REP', 'UNK']
+    '''
+    CH_PAR - Child living with at least one parent
+    CPL - Person in a couple
+    CSU - Person in a consensual union
+    MAR-Person in a married couple
+    NAP- Not applicable
+    PAR1 - Lone parent living with at least one child
+    REP - Persons in a registered partnership
+    UNK - ne zna se
+    '''
+    stats = [ch_par[nuts_index], cpl[nuts_index], csu[nuts_index], mar[nuts_index], nap[nuts_index],
+    par1[nuts_index], rep[nuts_index], unk[nuts_index]]        
+    ind = np.arange(len(hhstatuses))
+    fig = Figure(figsize=(8,8))
+    ax = fig.add_subplot(111)
+    ax.barh(ind, stats, align='center', color='purple')
+    ax.set_yticks(ind)
+    ax.set_yticklabels(hhstatuses)
+    ax.set_xlabel('Populacija')
+    ax.set_title(title)
+    
+    
+    return fig
+
+#funckija koja se poziva kada se neki od radio gumbova(ili dropdown za godine) promijeni
+def callback(*args):
+    #za sada crta samo jedan graf(nisam stigla napravit da se na temelju varijabli crta ono kaj treba to prepustam tebi)
+    fig = hhstatus_barh_chart(data2, 'HR031', hhstatus_index, sex_index2, age_index2, labels2, 'Primorsko-goranska županija')
+    #trebali bi nekako napravit da se pobrise sadrzaj canvasa i da se ponovo nacrta nes na njemu
+    canvas = FigureCanvasTkAgg(fig, master=plotPane)
+    canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
+    
+    
 #toc = eurostat.get_toc()
 
 toc_df = eurostat.get_toc_df()
@@ -91,21 +272,109 @@ population_dataset = eurostat.subset_toc_df(toc_df, 'population')
 
 #Populacija 1. siječnja po dobnoj skupini, spolu i NUTS 3 regijama(županije)
 data = eurostat.get_data('demo_r_pjangrp3')
+#Populacija prema bračnom statusu i NUTS 3 regijama za 2011. g(županije)
+data1 = eurostat.get_data('cens_11ms_r3')
+#Populacija prema obiteljskom statusu i NUTS 3 regijama za 2011. g(županije)
+data2 = eurostat.get_data('cens_11fs_r3')
+
 
 #oznake podataka
+#za data
 labels = data[0]
 geo_index = labels.index('geo\\time')
 sex_index = labels.index('sex')
 age_index = labels.index('age')
+#za data1
+labels1 = data1[0]
+sex_index1 = labels1.index('sex')
+age_index1 = labels1.index('age')
+marsta_index = labels1.index('marsta')
+#za data2
+labels2 = data2[0]
+sex_index2 = labels2.index('sex')
+age_index2 = labels2.index('age')
+hhstatus_index = labels2.index('hhstatus')
 
 #skup svih podataka(demo_r_pjangrp3) za hrvatsku
 HR = []
 for i in range(len(data)):
     if data[i][geo_index].find('HR') != -1:
         HR.append(data[i])
-        
 
 
+#početak gui prozora
+root = Tk.Tk()
+root.title("Grafički prikaz podataka hrvatske populacije")
+screen_width  = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+root.geometry(f'{screen_width}x{screen_height}')
+
+#bilo bi korisno napravit naslove za vrste gumbova
+#lijevi frame(za gumbe)
+dataPane = Tk.Frame(root,bg="grey")
+#1 podframe lijevog framea(za gumbe od zupanije)
+dataPane1 = Tk.Frame(dataPane,bg="grey")
+#2 podframe lijevog framea(za gumbe od vrsta grafa)
+dataPane2 = Tk.Frame(dataPane,bg="grey")
+#3 podframe lijevog framea(za dropdown za godine, to sluzi samo za graf di se usporeduju starosne dobi populacije)
+dataPane3 = Tk.Frame(dataPane,bg="grey")
+#frame za graf
+plotPane = Tk.Frame(root)
+dataPane.grid(row=0,column=0,sticky="nsew")
+plotPane.grid(row=0,column=1,sticky="nsew")
+dataPane1.grid(row=0,column=0,sticky="nsew")
+dataPane2.grid(row=0,column=1,sticky="nsew")
+dataPane3.grid(row=0,column=2,sticky="nsew")
+
+
+root.rowconfigure(0, weight=1)
+root.columnconfigure(0, weight=1)
+root.columnconfigure(1, weight=1)
+
+dataPane.rowconfigure(0, weight=1)
+dataPane.columnconfigure(0, weight=1)
+dataPane.columnconfigure(1, weight=1)
+dataPane.columnconfigure(2, weight=1)
+
+
+
+#varijable u koje se spremaju vrijednosti radio gumba i dropdowna
+#teritorij(zupanije)
+v = Tk.StringVar(root, "HR0")
+#vrsta grafa
+p = Tk.IntVar(root, 1) 
+#godina
+y = Tk.IntVar(root, 2019)
+  
+
+    
+#zupanije
+for (text, value) in nuts.items(): 
+    Tk.Radiobutton(dataPane1, text = text, variable = v,  
+                value = value, indicator = 0, 
+                background = "light blue").pack(fill = Tk.X, ipady = 5)  
+
+#vrste grafa
+for (text, value) in plots.items(): 
+    Tk.Radiobutton(dataPane2, text = text, variable = p,  
+                value = value, indicator = 0, 
+                background = "light blue").pack(fill = Tk.X, ipady = 5) 
+
+#dropdown za godine(trebalo bi pozicionirat ga pored ili ispod gumba za graf koji uspoređuje starosne dobi)
+years = Tk.OptionMenu(dataPane3, y, 2019, 2018, 2017,2016,2015,2014)
+years.pack()
+    
+
+#poziva se funkcija callback svaki put kada se nesto promijeni
+v.trace("w",callback)
+p.trace("w",callback)
+y.trace("w",callback)
+
+root.mainloop()
+
+
+#ako odkomentiram stvaranje pdfa crasha se jer se rade stalno novi prozori od gui-a, nez zas to radi,al mislim da se napravi pdf 
+'''
 #stvaranje pdf-a i naslovne stranice
 pp = PdfPages('pop.pdf')
 titlePage = plt.figure(figsize=(11.69,8.27))
@@ -240,7 +509,7 @@ hr = population_age_pie_chart(HR, 'HR0', geo_index, sex_index, age_index, year_i
 pp.savefig(hr)
 
 pp.close()
-
+'''
 
 
 
