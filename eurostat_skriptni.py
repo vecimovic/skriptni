@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 from matplotlib.figure import Figure
+import plotly.graph_objects as go
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 if sys.version_info[0] < 3:
@@ -72,8 +73,19 @@ def population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title):
     ax.set_xlabel("Godine",size='13')
     ax.set_ylabel("Populacija",size='13')
 
-
-    return fig
+    tabl = Figure(figsize=(8,8))
+    axt = tabl.add_subplot(111)
+    data = np.array([labels, p],np.int32)
+    clust_data = np.transpose(data)
+    collabel= ("Godina", "Populacija")
+    axt.axis('tight')
+    axt.axis('off')
+    the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
+    the_table[(0, 0)].set_facecolor("green")
+    the_table[(0, 1)].set_facecolor("green")
+    axt.set_title('Tablica za cjelokupnu populaciju \n\n' + title, size='15')
+    
+    return fig, tabl;
 
 #crta graf usporedbe muske i zenske populacije nekog područja
 def m_f_population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title):
@@ -97,8 +109,20 @@ def m_f_population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title
     ax.set_xlabel("Godine",size='13')
     ax.set_ylabel("Populacija",size='13')
     ax.legend()
-
-    return fig
+    
+    tabl = Figure(figsize=(8,8))
+    axt = tabl.add_subplot(111)
+    data = np.array([labels, f, m],np.int32)
+    clust_data = np.transpose(data)
+    collabel= ("Godina", "Ženska populacija", "Muška populacija")
+    axt.axis('tight')
+    axt.axis('off')
+    axt.set_title('Tablica za usporedbu muške i ženske populacije \n\n' + title,size='15')
+    the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
+    the_table[(0, 0)].set_facecolor("#b39ddb")
+    the_table[(0, 1)].set_facecolor("#ef9a9a")
+    the_table[(0, 2)].set_facecolor("#90caf9")
+    return fig, tabl;
 
 def make_autopct(values):
     def my_autopct(pct):
@@ -158,7 +182,18 @@ def population_age_pie_chart(HR, nuts, geo_index, sex_index, age_index, year_ind
     ax.pie(data, labels = ages, autopct=make_autopct(data))
     ax.set_title('Usporedba populacije po starosti \n\n'+ title + " ({}. godina)".format(labels[year_index]),size='15')
     
-    return fig
+    tabl = Figure(figsize=(8,8))
+    axt = tabl.add_subplot(111)
+    d = np.array([ages, data])
+    clust_data = np.transpose(d)
+    collabel= ("Raspon godina", "Populacija")
+    axt.axis('tight')
+    axt.axis('off')
+    axt.set_title('Tablica za usporedbu populacije po starosti \n\n'+ title + " ({}. godina)".format(labels[year_index]),size='15')
+    the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
+    the_table[(0, 0)].set_facecolor("#ffee58")
+    the_table[(0, 1)].set_facecolor("#ffee58")
+    return fig,tabl;
 
 #crta graf koji uspoređuje populaciju nekog područja prema bračnom statusu 
 def marsta_barh_chart(data, nuts, marsta_index, sex_index, age_index, labels, title):
@@ -166,14 +201,8 @@ def marsta_barh_chart(data, nuts, marsta_index, sex_index, age_index, labels, ti
         if data[i][age_index] == 'TOTAL' and data[i][sex_index] == 'T':
             if data[i][marsta_index] == 'MAR':
                 mar = data1[i]
-            if data[i][marsta_index] == 'DISREP':
-                disrep = data1[i]
             if data[i][marsta_index] == 'DIV':
                 div = data1[i]
-            if data[i][marsta_index] == 'DTHREP':
-                dthrep = data1[i]
-            if data[i][marsta_index] == 'REP':
-                rep = data1[i]
             if data[i][marsta_index] == 'SIN':
                 sin = data1[i]
             if data[i][marsta_index] == 'UNK':
@@ -182,9 +211,8 @@ def marsta_barh_chart(data, nuts, marsta_index, sex_index, age_index, labels, ti
                 wid = data1[i]
     
     nuts_index = labels.index(nuts)
-    marstats = ['MAR', 'DISREP', 'DIV', 'DTHREP', 'REP', 'SIN', 'UNK', 'WID']
-    stats = [mar[nuts_index], disrep[nuts_index], div[nuts_index], dthrep[nuts_index], rep[nuts_index],
-            sin[nuts_index], unk[nuts_index], wid[nuts_index]]
+    marstats = ['MAR', 'DIV', 'SIN', 'UNK', 'WID']
+    stats = [mar[nuts_index], div[nuts_index], sin[nuts_index], unk[nuts_index], wid[nuts_index]]
     ind = np.arange(len(marstats))
     fig = Figure(figsize=(8,8))
     ax = fig.add_subplot(111)
@@ -193,25 +221,30 @@ def marsta_barh_chart(data, nuts, marsta_index, sex_index, age_index, labels, ti
     ax.set_yticklabels(marstats)
     ax.set_xlabel('Populacija',size='13')
     ax.set_title('Usporedba populacije po bračnom statusu \n\n' + title,size='15')
+
+    tabl = Figure(figsize=(8,8))
+    axt = tabl.add_subplot(111)
+    d = np.array([marstats, stats])
+    clust_data = np.transpose(d)
+    collabel= ("Bračni status", "Populacija")
+    axt.axis('tight')
+    axt.axis('off')
+    axt.set_title('Tablica za usporedbu populacije po bračnom statusu \n\n' + title,size='15')
+    the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
+    the_table[(0, 0)].set_facecolor("orange")
+    the_table[(0, 1)].set_facecolor("orange")
+    return fig, tabl;
     
-    
-    return fig
 
 #crta graf koji uspoređuje populaciju nekog područja prema obiteljskom statusu 
 def hhstatus_barh_chart(data, nuts, hhstatus_index, sex_index, age_index, labels, title):
 
     for i in range(len(data)):
         if data[i][age_index] == 'TOTAL' and data[i][sex_index] == 'T':
-            if data[i][hhstatus_index] == 'CH_PAR':
-                ch_par = data1[i]
             if data[i][hhstatus_index] == 'CPL':
                 cpl = data1[i]
-            if data[i][hhstatus_index] == 'CSU':
-                csu = data1[i]
             if data[i][hhstatus_index] == 'MAR':
                 mar = data1[i]
-            if data[i][hhstatus_index] == 'NAP':
-                nap = data1[i]
             if data[i][hhstatus_index] == 'PAR1':
                 par1 = data1[i]
             if data[i][hhstatus_index] == 'REP':
@@ -220,9 +253,8 @@ def hhstatus_barh_chart(data, nuts, hhstatus_index, sex_index, age_index, labels
                 unk = data1[i]
             
     nuts_index = labels.index(nuts)
-    hhstatuses = ['CH_PAR', 'CPL', 'CSU', 'MAR', 'NAP', 'PAR1', 'REP', 'UNK']
-    stats = [ch_par[nuts_index], cpl[nuts_index], csu[nuts_index], mar[nuts_index], nap[nuts_index],
-    par1[nuts_index], rep[nuts_index], unk[nuts_index]]        
+    hhstatuses = ['CPL','MAR','PAR1', 'REP', 'UNK']
+    stats = [cpl[nuts_index], mar[nuts_index], par1[nuts_index], rep[nuts_index], unk[nuts_index]]        
     ind = np.arange(len(hhstatuses))
     fig = Figure(figsize=(8,8))
     ax = fig.add_subplot(111)
@@ -232,33 +264,54 @@ def hhstatus_barh_chart(data, nuts, hhstatus_index, sex_index, age_index, labels
     ax.set_xlabel('Populacija',size='13')
     ax.set_title('Usporedba populacije po obiteljskom statusu \n\n' + title,size='15')
     
-    
-    return fig
+    tabl = Figure(figsize=(8,8))
+    axt = tabl.add_subplot(111)
+    d = np.array([hhstatuses, stats])
+    clust_data = np.transpose(d)
+    collabel= ("Obiteljski status", "Populacija")
+    axt.axis('tight')
+    axt.axis('off')
+    axt.set_title('Tablica za usporedbu populacije po obiteljskom statusu \n\n' + title,size='15')
+    the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
+    the_table[(0, 0)].set_facecolor("#b39ddb")
+    the_table[(0, 1)].set_facecolor("#b39ddb")
+    return fig, tabl;
+
 
 #funkcija koja se poziva kada se neki od radio gumbova(ili dropdown za godine) promijeni
 def callback(*args):
+
     for widget in plotPane.winfo_children():
         widget.destroy()
     if (p.get() == 1):
-        fig = population_hist(HR, v.get(), geo_index, sex_index, age_index, labels[4:], get_key(v.get(), nuts))
+        fig,tabl = population_hist(HR, v.get(), geo_index, sex_index, age_index, labels[4:], get_key(v.get(), nuts))  
     elif (p.get() == 2):
-        fig = m_f_population_hist(HR, v.get(), geo_index, sex_index, age_index, labels[4:], get_key(v.get(), nuts))
+        fig,tabl = m_f_population_hist(HR, v.get(), geo_index, sex_index, age_index, labels[4:], get_key(v.get(), nuts))
     elif (p.get() == 3):
         year_index = labels.index(y.get())
-        fig = population_age_pie_chart(HR, v.get(), geo_index, sex_index, age_index, year_index, labels, get_key(v.get(), nuts))
+        fig,tabl = population_age_pie_chart(HR, v.get(), geo_index, sex_index, age_index, year_index, labels, get_key(v.get(), nuts))
     elif (p.get() == 4):
-        fig =  marsta_barh_chart(data1, v.get(), marsta_index, sex_index1, age_index1, labels1, get_key(v.get(), nuts))
+        fig,tabl=  marsta_barh_chart(data1, v.get(), marsta_index, sex_index1, age_index1, labels1, get_key(v.get(), nuts))
     elif (p.get() == 5):
-        fig = hhstatus_barh_chart(data2, v.get(), hhstatus_index, sex_index2, age_index2, labels2, get_key(v.get(), nuts))
-
-    canvas = FigureCanvasTkAgg(fig, master=plotPane)
+        fig,tabl = hhstatus_barh_chart(data2, v.get(), hhstatus_index, sex_index2, age_index2, labels2, get_key(v.get(), nuts))
+    
+    
+    graf = fig
+    tablica = tabl
+    canvas = FigureCanvasTkAgg(tabl, master=plotPane)
     canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 
-    
-    
+def save():
+    pdf = PdfPages('podaci.pdf')
+    pdf.savefig(graf)
+    pdf.savefig(tablica)
+    pdf.close()
+
 #toc = eurostat.get_toc()
 
 #toc_df = eurostat.get_toc_df()
+global graf
+global tablica 
 
 #population_dataset = eurostat.subset_toc_df(toc_df, 'population')
 
@@ -365,7 +418,14 @@ years["menu"].config(bg="light blue")
 years.pack()
 years.place(y = 110)
 
-fig = population_hist(HR, "HR0", geo_index, sex_index, age_index, labels[4:], get_key("HR0", nuts))
+button_tk = Tk.Button(dataPane2, text="Spremi graf i pripadajuću\n tablicu podataka", command=save) 
+button_tk.config(bg = "yellow")
+button_tk.pack(fill = Tk.X)
+button_tk.place(y= 400)
+
+fig,tabl = population_hist(HR, "HR0", geo_index, sex_index, age_index, labels[4:], get_key("HR0", nuts))
+graf = fig
+tablica = tabl
 canvas = FigureCanvasTkAgg(fig, master=plotPane)
 canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 
@@ -375,10 +435,3 @@ p.trace("w",callback)
 y.trace("w",callback)
 
 root.mainloop()
-
-
-
-
-
-
-
