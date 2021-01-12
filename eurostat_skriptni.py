@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib
 from matplotlib.figure import Figure
-import plotly.graph_objects as go
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
+import webbrowser as wb
 if sys.version_info[0] < 3:
     import Tkinter as Tk
 else:
@@ -85,7 +85,7 @@ def population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title):
     the_table[(0, 1)].set_facecolor("green")
     axt.set_title('Tablica za cjelokupnu populaciju \n\n' + title, size='15')
     
-    return fig, tabl;
+    return fig, tabl
 
 #crta graf usporedbe muske i zenske populacije nekog područja
 def m_f_population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title):
@@ -122,7 +122,7 @@ def m_f_population_hist(HR, nuts, geo_index, sex_index, age_index, labels, title
     the_table[(0, 0)].set_facecolor("#b39ddb")
     the_table[(0, 1)].set_facecolor("#ef9a9a")
     the_table[(0, 2)].set_facecolor("#90caf9")
-    return fig, tabl;
+    return fig, tabl
 
 def make_autopct(values):
     def my_autopct(pct):
@@ -193,7 +193,7 @@ def population_age_pie_chart(HR, nuts, geo_index, sex_index, age_index, year_ind
     the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
     the_table[(0, 0)].set_facecolor("#ffee58")
     the_table[(0, 1)].set_facecolor("#ffee58")
-    return fig,tabl;
+    return fig,tabl
 
 #crta graf koji uspoređuje populaciju nekog područja prema bračnom statusu 
 def marsta_barh_chart(data, nuts, marsta_index, sex_index, age_index, labels, title):
@@ -233,7 +233,7 @@ def marsta_barh_chart(data, nuts, marsta_index, sex_index, age_index, labels, ti
     the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
     the_table[(0, 0)].set_facecolor("orange")
     the_table[(0, 1)].set_facecolor("orange")
-    return fig, tabl;
+    return fig, tabl
     
 
 #crta graf koji uspoređuje populaciju nekog područja prema obiteljskom statusu 
@@ -275,7 +275,7 @@ def hhstatus_barh_chart(data, nuts, hhstatus_index, sex_index, age_index, labels
     the_table = axt.table(cellText=clust_data,colLabels=collabel,loc='center')
     the_table[(0, 0)].set_facecolor("#b39ddb")
     the_table[(0, 1)].set_facecolor("#b39ddb")
-    return fig, tabl;
+    return fig, tabl
 
 
 #funkcija koja se poziva kada se neki od radio gumbova(ili dropdown za godine) promijeni
@@ -294,19 +294,22 @@ def callback(*args):
         fig,tabl=  marsta_barh_chart(data1, v.get(), marsta_index, sex_index1, age_index1, labels1, get_key(v.get(), nuts))
     elif (p.get() == 5):
         fig,tabl = hhstatus_barh_chart(data2, v.get(), hhstatus_index, sex_index2, age_index2, labels2, get_key(v.get(), nuts))
-    
+    global graf
+    global tablica
     
     graf = fig
     tablica = tabl
-    canvas = FigureCanvasTkAgg(tabl, master=plotPane)
+    canvas = FigureCanvasTkAgg(fig, master=plotPane)
     canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 
+
 def save():
-    pdf = PdfPages('podaci.pdf')
     pdf.savefig(graf)
     pdf.savefig(tablica)
-    pdf.close()
 
+def close():
+    pdf.close()
+    wb.open_new('podaci.pdf')
 #toc = eurostat.get_toc()
 
 #toc_df = eurostat.get_toc_df()
@@ -314,7 +317,7 @@ global graf
 global tablica 
 
 #population_dataset = eurostat.subset_toc_df(toc_df, 'population')
-
+pdf = PdfPages('podaci.pdf')
 #Populacija 1. siječnja po dobnoj skupini, spolu i NUTS 3 regijama(županije)
 data = eurostat.get_data('demo_r_pjangrp3')
 #Populacija prema bračnom statusu i NUTS 3 regijama za 2011. g(županije)
@@ -418,10 +421,16 @@ years["menu"].config(bg="light blue")
 years.pack()
 years.place(y = 110)
 
-button_tk = Tk.Button(dataPane2, text="Spremi graf i pripadajuću\n tablicu podataka", command=save) 
+#gumb za spremanje grafa i tablice u pdf
+button_tk = Tk.Button(dataPane2, text="Spremi graf i pripadajuću\n tablicu podataka u zajednički pdf", command=save) 
+button_tk.config(bg = "yellow")
+button_tk.pack()
+button_tk.place(x = 40, y= 400)
+#gumb za zatvaranje pdf-a i otvaranje istog na racunalu
+button_tk = Tk.Button(dataPane2, text="Zatvori spremanje u pdf", command=close) 
 button_tk.config(bg = "yellow")
 button_tk.pack(fill = Tk.X)
-button_tk.place(y= 400)
+button_tk.place(x = 40, y= 500)
 
 fig,tabl = population_hist(HR, "HR0", geo_index, sex_index, age_index, labels[4:], get_key("HR0", nuts))
 graf = fig
